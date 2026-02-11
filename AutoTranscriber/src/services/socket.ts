@@ -12,7 +12,7 @@ class WebSocketService {
   private messageListeners: MessageCallback[] = [];
   private statusListeners: StatusCallback[] = [];
   
-  private url: string = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8000/ws/transcription';
+  private url: string = import.meta.env.VITE_WEBSOCKET_URL || `ws://${window.location.hostname}:8000/ws/transcription`;
 
   connect() {
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {

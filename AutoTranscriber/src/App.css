@@ -17,7 +17,7 @@
 
 @media (min-width: 1920px) {
   :root {
-    --content-width: 90%;
+    --content-width: 95%;
   }
 }
 
@@ -35,7 +35,7 @@ body, html {
   
   height: 100dvh;
   width: 100vw;
-  background-color: lightgreen;
+  background-color: rgb(204, 204, 204);
 }
 
 h1 {

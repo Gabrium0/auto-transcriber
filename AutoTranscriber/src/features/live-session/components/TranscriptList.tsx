@@ -59,7 +59,7 @@ export default function TranscriptList() {
                 </div>
             </div>
 
-            <div className="list-content flex-1 bg-gray-100 overflow-hidden relative">
+            <div className="list-content flex-1 bg-gray-100 overflow-hidden relative ">
                 <Virtuoso
                     ref={virtuosoRef}
                     className="h-full"
