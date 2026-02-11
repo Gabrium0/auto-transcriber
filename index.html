@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcription Stream Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin-top: 0; }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+
+        .indicator {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background-color: #dc3545; /* Red for disconnected */
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .indicator.connected {
+            background-color: #28a745; /* Green for connected */
+        }
+
+        #log {
+            background-color: #1e1e1e;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+        }
+
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 2px; }
+        .log-time { color: #888; font-size: 0.8em; margin-right: 10px; }
+
+        .controls { margin-top: 1rem; display: flex; gap: 10px; }
+        
+        button {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .btn-connect { background-color: #007bff; color: white; }
+        .btn-disconnect { background-color: #6c757d; color: white; }
+        .btn-clear { background-color: #dc3545; color: white; margin-left: auto; }
+        
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🔴 Live Transcription Stream</h1>
+    
+    <div class="status-bar">
+        <div id="indicator" class="indicator"></div>
+        <span id="status-text">Disconnected</span>
+    </div>
+
+    <div id="log"></div>
+
+    <div class="controls">
+        <button id="btn-connect" class="btn-connect" onclick="connect()">Connect</button>
+        <button id="btn-disconnect" class="btn-disconnect" onclick="disconnect()" disabled>Disconnect</button>
+        <button class="btn-clear" onclick="clearLog()">Clear Log</button>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+    const logDiv = document.getElementById('log');
+    const statusText = document.getElementById('status-text');
+    const indicator = document.getElementById('indicator');
+    const btnConnect = document.getElementById('btn-connect');
+    const btnDisconnect = document.getElementById('btn-disconnect');
+
+    function connect() {
+        // Ensure we close any existing connection first
+        if (ws) { ws.close(); }
+
+        // Connect to localhost:8000
+        ws = new WebSocket("ws://localhost:8000/ws/transcription");
+
+        ws.onopen = function() {
+            updateStatus(true);
+            appendLog("System: Connected to WebSocket server.");
+        };
+
+        ws.onmessage = function(event) {
+            // Try to parse JSON if your backend sends JSON, otherwise print text
+            try {
+                const data = JSON.parse(event.data);
+                appendLog(JSON.stringify(data, null, 2));
+            } catch (e) {
+                appendLog(event.data);
+            }
+        };
+
+        ws.onclose = function(event) {
+            updateStatus(false);
+            appendLog(`System: Disconnected (Code: ${event.code})`);
+            ws = null;
+        };
+
+        ws.onerror = function(error) {
+            console.error("WebSocket Error:", error);
+            appendLog("System: Error occurred. Check console.");
+        };
+    }
+
+    function disconnect() {
+        if (ws) {
+            ws.close();
+        }
+    }
+
+    function updateStatus(isConnected) {
+        if (isConnected) {
+            indicator.classList.add('connected');
+            statusText.textContent = "Connected";
+            btnConnect.disabled = true;
+            btnDisconnect.disabled = false;
+        } else {
+            indicator.classList.remove('connected');
+            statusText.textContent = "Disconnected";
+            btnConnect.disabled = false;
+            btnDisconnect.disabled = true;
+        }
+    }
+
+    function appendLog(message) {
+        const time = new Date().toLocaleTimeString();
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+        
+        logDiv.appendChild(entry);
+        
+        // Auto-scroll to bottom
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function clearLog() {
+        logDiv.innerHTML = '';
+    }
+
+    // Auto-connect on load (optional)
+    // connect();
+</script>
+
+</body>
+</html>
