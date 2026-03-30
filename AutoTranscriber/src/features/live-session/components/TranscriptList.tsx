@@ -10,20 +10,23 @@ export default function TranscriptList() {
 
     const transcripts = useTranscriptStore((state) => state.transcripts);
     const interimTranscript = useTranscriptStore((state) => state.interimTranscript);
-    const isConnected = useTranscriptStore((state) => state.isConnected);
+
+    const interimTranslation = useTranscriptStore((state) => state.interimTranslation); // 1. Add this
     
+    const isConnected = useTranscriptStore((state) => state.isConnected);
+
     const targetLang = useTranscriptStore((state) => state.targetLang);
     const setTargetLang = useTranscriptStore((state) => state.setTargetLang);
-    
+
     const virtuosoRef = useRef<VirtuosoHandle>(null);
 
     const scrollTrigger = `${transcripts.length}-${interimTranscript}`;
-    
-    const { 
-        isAutoScrollEnabled, 
-        handleToggle, 
+
+    const {
+        isAutoScrollEnabled,
+        handleToggle,
         handleAtBottomStateChange,
-    } = useAutoScroll(virtuosoRef, scrollTrigger); 
+    } = useAutoScroll(virtuosoRef, scrollTrigger);
 
     return (
         <div className="transcript-container flex flex-col h-full w-full relative">
@@ -32,11 +35,10 @@ export default function TranscriptList() {
                     <h2 className="font-bold">Live Session</h2>
                     <button
                         onClick={handleToggle}
-                        className={`text-xs px-3 py-1 border rounded transition-colors flex items-center gap-2 ${
-                            isAutoScrollEnabled 
-                                ? 'bg-blue-100 border-blue-300 text-blue-700 font-semibold' 
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
+                        className={`text-xs px-3 py-1 border rounded transition-colors flex items-center gap-2 ${isAutoScrollEnabled
+                            ? 'bg-blue-100 border-blue-300 text-blue-700 font-semibold'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
                     >
                         {isAutoScrollEnabled ? '↓ Auto-Scroll: ON' : 'Auto-Scroll: OFF'}
                     </button>
@@ -44,7 +46,7 @@ export default function TranscriptList() {
 
                 <div className="flex items-center gap-2">
                     <label className="text-xs text-gray-500 font-medium">Translate to:</label>
-                    <select 
+                    <select
                         value={targetLang}
                         onChange={(e) => setTargetLang(e.target.value)}
                         className="text-sm p-1 border rounded bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -52,7 +54,7 @@ export default function TranscriptList() {
                         <option value="nl">Dutch (NL)</option>
                         <option value="en">English (EN)</option>
                     </select>
-                    
+
                     <span className={`ml-2 text-xs px-2 py-1 rounded ${isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {isConnected ? '●' : '○'}
                     </span>
@@ -64,12 +66,12 @@ export default function TranscriptList() {
                     ref={virtuosoRef}
                     className="h-full"
                     data={transcripts}
-                    followOutput={isAutoScrollEnabled ? 'smooth' : false} 
+                    followOutput={isAutoScrollEnabled ? 'smooth' : false}
                     atBottomStateChange={handleAtBottomStateChange}
                     itemContent={(_, item) => (
                         <div className="px-4 py-2">
                             <TranscriptItem
-                                text={item.text} 
+                                text={item.text}
                                 translation={item.translation}
                                 isFinal={true}
                             />
@@ -81,6 +83,7 @@ export default function TranscriptList() {
                                 <div className="px-4 py-2 pb-4">
                                     <TranscriptItem
                                         text={`${interimTranscript}...`}
+                                        translation={interimTranslation} // 2. Pass it here
                                         isFinal={false}
                                     />
                                 </div>

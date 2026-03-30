@@ -38,19 +38,29 @@ class Transcribe:
             model="large-v3-turbo",
             language="pt",
             device="cuda" if torch.cuda.is_available() else "cpu",
-            compute_type="int8_float32", 
+            compute_type="int8_float16", 
             
             enable_realtime_transcription=True,
             realtime_model_type="medium", 
+            # realtime_model_type="tiny", 
             
             input_device_index=0,
             spinner=False,
 
-            initial_prompt="A seguir, uma conversa normal em Português. O texto deve ser fiel, claro e bem pontuado.",
+            # initial_prompt="A seguir, uma conversa normal em Português. O texto deve ser fiel, claro e bem pontuado.",
             
+            # # Tuning parameters
+            # beam_size=3, 
+            # # post_speech_silence_duration=1, 
+            # post_speech_silence_duration=1, 
+            # # realtime_processing_pause=0.05,
+            # min_length_of_recording=0.4,
+            # silero_sensitivity=0.4,
+            # webrtc_sensitivity=1,
+
             # Tuning parameters
-            beam_size=1, 
-            post_speech_silence_duration=0.3, 
+            beam_size=3, 
+            post_speech_silence_duration=0.8, # 1
             min_length_of_recording=0.4,
             silero_sensitivity=0.4,
             webrtc_sensitivity=1,
