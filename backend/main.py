@@ -1,4 +1,5 @@
 import asyncio
+import json
 import threading
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from contextlib import asynccontextmanager
@@ -45,21 +46,28 @@ app = FastAPI(lifespan=lifespan)
 @app.websocket("/ws/transcription")
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """Manages full-duplex WebSocket connections for transcription streaming.
-    
-    Receives language configuration preferences from the client and broadcasts updates.
+
+    Listens for JSON control messages from the client (e.g., ``set_language``)
+    and gracefully handles both normal disconnects (code 1001 – going away) and
+    abnormal disconnects without crashing the ASGI application.
     """
     await connection_manager.connect(websocket)
     try:
         while True:
+            # Receive raw bytes/text so we control parsing ourselves.
+            # receive_text() raises WebSocketDisconnect on any close event,
+            # which bubbles up cleanly to the outer except block.
+            raw = await websocket.receive_text()
             try:
-                data = await websocket.receive_json()
+                data = json.loads(raw)
                 if isinstance(data, dict) and data.get("type") == "set_language":
                     lang = data.get("language", "en")
                     await connection_manager.set_language(websocket, lang)
-            except Exception:
-                # If they send plain text or non-JSON, keep the loop alive by calling receive_text
-                await websocket.receive_text()
-            
+                    print(f"Language set to '{lang}' for client.")
+            except (json.JSONDecodeError, ValueError):
+                # Non-JSON text from the client — ignore silently.
+                pass
+
     except WebSocketDisconnect:
         connection_manager.disconnect(websocket)
         await connection_manager.broadcast("info", 0, "A user disconnected")

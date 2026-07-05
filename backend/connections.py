@@ -304,6 +304,7 @@ class Connections:
             try:
                 if type == "transcription":
                     lang = config.get("language", "en")
+                    print(f"[Broadcast] Translating to '{lang}' for client.")
                     # Offload blocking operations to thread pool
                     translation, audio_url = await loop.run_in_executor(
                         None, self._translate_and_tts, message, lang

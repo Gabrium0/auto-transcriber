@@ -32,24 +32,30 @@ class WebSocketService {
       return;
     }
 
-    this.socket = new WebSocket(this.url);
+    const socket = new WebSocket(this.url);
+    this.socket = socket;
 
-    this.socket.onopen = () => {
+    socket.onopen = () => {
       console.log('WS Connected');
       this.notifyStatus(true);
     };
 
-    this.socket.onclose = () => {
+    socket.onclose = () => {
       console.log('WS Disconnected');
-      this.notifyStatus(false);
-      this.socket = null;
+      // Only nullify if this socket is still the current one.
+      // Prevents a stale socket's onclose from clobbering a newer connection
+      // (critical under React StrictMode's mount-unmount-remount cycle).
+      if (this.socket === socket) {
+        this.notifyStatus(false);
+        this.socket = null;
+      }
     };
 
-    this.socket.onerror = (error) => {
+    socket.onerror = (error) => {
       console.error('WS Error:', error);
     };
 
-    this.socket.onmessage = (event) => {
+    socket.onmessage = (event) => {
       try {
         const data: BackendMessage = JSON.parse(event.data);
         this.notifyMessage(data);
