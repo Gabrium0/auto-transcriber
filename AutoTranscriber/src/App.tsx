@@ -1,7 +1,10 @@
 import './App.css'
 import TranscriptList from './features/live-session/components/TranscriptList'
+import { useWakeLock } from './hooks/useWakeLock'
 
 function App() {
+  useWakeLock()
+
   return (
     <div className="app-container">
       {/* <h1>AutoTranscriber</h1> */}
