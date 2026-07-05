@@ -13,6 +13,11 @@ transcriber_service = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """FastAPI context manager to handle backend service initialization and termination.
+    
+    Spawns the RealtimeSTT transcription service on a background daemon thread
+    and terminates it during server shutdown.
+    """
     print("Starting up...")
     
     loop = asyncio.get_running_loop()
@@ -38,11 +43,22 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 @app.websocket("/ws/transcription")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
+    """Manages full-duplex WebSocket connections for transcription streaming.
+    
+    Receives language configuration preferences from the client and broadcasts updates.
+    """
     await connection_manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text()
+            try:
+                data = await websocket.receive_json()
+                if isinstance(data, dict) and data.get("type") == "set_language":
+                    lang = data.get("language", "en")
+                    await connection_manager.set_language(websocket, lang)
+            except Exception:
+                # If they send plain text or non-JSON, keep the loop alive by calling receive_text
+                await websocket.receive_text()
             
     except WebSocketDisconnect:
         connection_manager.disconnect(websocket)

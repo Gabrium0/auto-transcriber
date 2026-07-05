@@ -1,73 +1,41 @@
-# React + TypeScript + Vite
+# 💻 Auto-Transcriber Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the Vite-based React + TypeScript frontend web application for the Auto-Transcriber project. It establishes a WebSocket connection with the backend translation server, renders transcription lines in real-time, and manages sequential audio playback queueing.
 
-Currently, two official plugins are available:
+## Key Features
+- **Live Text Feed**: Displays live updates for interim speech (italicized) and translates final speech blocks instantly.
+- **Auto-Scroll Toggle**: Toggle automatic vertical scroll following the transcription feed.
+- **Audio Queue & Autoplay**: Autoplays synthesized TTS voice segments consecutively.
+- **Audio Volume Switch**: Mute/unmute button directly in the header (pauses active audio and clears queue).
+- **Target Language Select**: Dynamically choose target translation languages (Dutch, English, Spanish, French, German, Italian, or Portuguese).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setup & Running Locally
 
-## React Compiler
+Ensure you have [Bun](https://bun.sh/) or [Node.js](https://nodejs.org/) installed.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install dependencies:
+   ```bash
+   bun install
+   # or
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. Run the dev server:
+   ```bash
+   bun run dev
+   # or
+   npm run dev
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. Build for production:
+   ```bash
+   bun run build
+   # or
+   npm run build
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Key Modules
+- `src/features/live-session/stores/useTranscriptStore.ts`: Zustand store managing state (transcripts, target language, audio queue, and playback scheduling).
+- `src/features/live-session/components/TranscriptList.tsx`: Main component layout rendering the virtualized feed list, status bar, and selection toolbar.
+- `src/services/socket.ts`: WebSocket client wrapper sending events (like `set_language`) and receiving messages from FastAPI.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
