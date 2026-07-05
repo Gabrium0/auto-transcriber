@@ -14,8 +14,8 @@ The backend consists of three primary Python modules:
 - Exposes the `/ws/transcription` WebSocket endpoint to handle client handshakes, register connection preference updates (such as language switching), and keep client sessions alive.
 
 ### 2. `transcribe.py`
-- Operates the `AudioToTextRecorder` from `RealtimeSTT`.
-- Configured to run the Whisper `large-v3-turbo` model for high-accuracy speech recognition.
+- Selects the best available transcription backend: `RealtimeSTT`/`faster-whisper` for CUDA and CPU, or `openai-whisper` on PyTorch MPS for Apple Silicon Macs.
+- Configured to run an accuracy-first Whisper model (`large-v3` on Apple MPS, `large-v3-turbo` on `RealtimeSTT` by default).
 - Uses `initial_prompt` to seed the acoustic model with Portuguese Christian names and proper spellings (*Deus, Jesus Cristo, o Espírito Santo, a Bíblia Sagrada, Paulo, Pedro, João, Tiago, Moisés, Isaías, Davi, Amém*).
 - Uses `beam_size=5` to increase search space and prioritize transcription accuracy over speed.
 
@@ -49,20 +49,44 @@ Activate the environment:
   source venv/bin/activate
   ```
 
-### 2. Install PyTorch (CUDA vs CPU)
+### 2. macOS Apple Silicon Prerequisites
+On an M-series MacBook, use a native arm64 Python installation, not a Rosetta/x86 Python. Install the native audio and FFmpeg dependencies first:
+```bash
+brew install portaudio ffmpeg
+```
+
+The backend will automatically use the Apple MPS transcription backend when PyTorch reports MPS support is available.
+
+### 3. Install PyTorch (CUDA, MPS, or CPU)
 If you have an NVIDIA GPU, install PyTorch with CUDA 12.1 support for faster Whisper transcription:
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
-For Mac or CPU-only setups, run:
+For Mac/MPS or CPU-only setups, run:
 ```bash
 pip install torch torchvision torchaudio
 ```
 
-### 3. Install Requirements
+### 4. Install Requirements
 ```bash
 pip install -r requirements.txt
 ```
+
+### 5. Transcription Backend Configuration
+By default, the backend selects the best available transcription path:
+- NVIDIA CUDA: `RealtimeSTT` with `faster-whisper` on CUDA.
+- Apple Silicon MPS: `openai-whisper` on PyTorch MPS.
+- Other systems: `RealtimeSTT` on CPU with CPU-safe quantization.
+
+You can override the defaults with environment variables:
+```bash
+export TRANSCRIBE_BACKEND=auto        # auto, realtimestt, or whisper_mps
+export WHISPER_MODEL=large-v3         # accuracy-first default on Apple MPS
+export WHISPER_BEAM_SIZE=5            # higher favors accuracy over speed
+export MIC_INPUT_DEVICE_INDEX=0
+```
+
+For Apple Silicon accuracy, keep `WHISPER_MODEL=large-v3` and `WHISPER_BEAM_SIZE=5`. If you need lower latency, use `WHISPER_MODEL=turbo` or reduce the beam size.
 
 ---
 
